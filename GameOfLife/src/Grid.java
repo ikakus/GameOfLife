@@ -4,7 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.List;
+
 
 /**
  * Created by ikakus on 2/9/14.
@@ -13,61 +13,68 @@ public class Grid extends JPanel {
 
     JLabel view;
     BufferedImage surface;
-    public List<Point> getmLiveCells() {
-        return mLiveCells;
-    }
 
-    public void setmLiveCells(List<Point> mLiveCells) {
-        this.mLiveCells = mLiveCells;
-    }
 
-    private List<Point> mLiveCells;
+    private ArrayList<Point> mLiveCells;
 
-    private int mWidth = 600;
-    private int mHeight = 400;
+    private int mWindowWidth = 801;
+    private int mWindowHeight = 501;
+    private int mStep = 10;
+
+
     private int i =0;
+
+    private int mMapWidth = mWindowWidth/mStep;
+    private int mMapHeight = mWindowHeight/mStep;
+
+    private int mMap[][] = new int[mMapWidth][mMapHeight];
 
     public Grid() {
 
         mLiveCells = new ArrayList<Point>();
-        surface = new BufferedImage(mWidth,mHeight,BufferedImage.TYPE_INT_RGB);
+        surface = new BufferedImage(mWindowWidth,mWindowHeight,BufferedImage.TYPE_INT_RGB);
         view = new JLabel(new ImageIcon(surface));
         Graphics g = surface.getGraphics();
         g.setColor(Color.ORANGE);
-        g.fillRect(0,0,mWidth,mHeight);
+        g.fillRect(0,0,mWindowWidth,mWindowHeight);
         g.setColor(Color.BLACK);
         g.dispose();
 
+        AddCell(3,3);
+        AddCell(3,4);
+        AddCell(3,5);
+
+
+        ReDrawGrid();
         ActionListener listener = new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
                 Test();
-                RecalcGrid();
+                ReDrawGrid();
             }
         };
 
-        Timer timer = new Timer(500, listener);
+        Timer timer = new Timer(1000, listener);
         timer.start();
 
     }
 
     private void Test()
     {
-        fillCell(i,0);
+        CheckRules();
+       // MoveCell(i,0);
          i++;
     }
 
 
 
-    public void RecalcGrid()
+    public void ReDrawGrid()
     {
-        int step = 10;
-        int width = 800;
-        int height = 500;
-
         Graphics g = surface.getGraphics();
 
-        FillCells(g, step, width, height);
-        DrawGrid(g, step, width, height);
+        g.setColor(Color.ORANGE);
+        g.fillRect(0,0,mWindowWidth,mWindowHeight);
+        FillCells(g, mStep, mWindowWidth, mWindowHeight);
+        DrawGrid(g, mStep, mWindowWidth, mWindowHeight);
         g.dispose();
         view.repaint();
     }
@@ -78,12 +85,8 @@ public class Grid extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        int step = 10;
-        int width = 800;
-        int height = 500;
-
-        FillCells(g, step, width, height);
-        DrawGrid(g, step, width, height);
+        FillCells(g, mStep, mWindowWidth, mWindowHeight);
+        DrawGrid(g, mStep, mWindowWidth, mWindowHeight);
     }
 
     private void FillCells(Graphics g, int step, int width, int height) {
@@ -98,28 +101,101 @@ public class Grid extends JPanel {
     }
 
     private void DrawGrid(Graphics g, int step, int width, int height) {
-        for (int i = step; i <= width; i += step) {
+        for (int i = 0; i <= width; i += step) {
             g.drawLine(i, 0, i, height + step);
         }
 
-        for (int i = step; i <= height; i += step) {
+        for (int i = 0; i <= height; i += step) {
             g.drawLine(0, i, width + step, i);
         }
     }
 
 
-    public void fillCell(int x, int y) {
-        mLiveCells.add(new Point(x, y));
+    private void CheckRules()
+    {
+        mLiveCells = new ArrayList<Point>();
+
+        for(int i = 1;i < mMapWidth-1;i++)
+            for(int j =1; j < mMapHeight-1;j++)
+            {
+                 if(mMap[i][j]>1 && mMap[i][j]<4)
+                 {
+                    // if( !ContainsCell(new Point(i,j)) )
+
+                     AddCell(i,j);
+                 }
+
+                  if( mMap[i][j]!= 0 )
+                 {
+                     if( ContainsCell(new Point(i,j)) )
+                     RemoveCell(i,j);
+                 }
+            }
+    }
+
+    public void AddCell(int x, int y) {
+        Point p =   new Point(x, y);
+        mLiveCells.add(p);
+        AppendNeighborCells(p);
         repaint();
     }
 
-    private int GetCellNeighbors(Point point)
+    public void RemoveCell(int x,int y)
     {
-        int nCount=0;
+        Point p =   new Point(x, y);
+        DecrementNeighborCells(p);
+        repaint();
+    }
 
+    private boolean ContainsCell(Point point)
+    {
 
+        for(Point p: mLiveCells)
+        {
+            if(point.x == p.x && point.y == p.y)
+                return true;
+        }
 
-        return nCount;
+        return false;
+    }
+
+    private void DecrementNeighborCells(Point point)
+    {
+        if(mMap[point.x-1][point.y]!=0)
+        mMap[point.x-1][point.y]--;
+
+        if(mMap[point.x-1][point.y-1]!=0)
+        mMap[point.x-1][point.y-1]--;
+
+        if(mMap[point.x-1][point.y+1]!=0)
+        mMap[point.x-1][point.y+1]--;
+
+        if(mMap[point.x+1][point.y]!=0)
+        mMap[point.x+1][point.y]--;
+
+        if(mMap[point.x+1][point.y-1]!=0)
+        mMap[point.x+1][point.y-1]--;
+
+        if(mMap[point.x+1][point.y+1]!=0)
+        mMap[point.x+1][point.y+1]--;
+
+        if(mMap[point.x][point.y-1]!=0)
+        mMap[point.x][point.y-1]--;
+
+        if(mMap[point.x][point.y+1]!=0)
+        mMap[point.x][point.y+1]--;
+    }
+
+    private void AppendNeighborCells(Point point)
+    {
+        mMap[point.x-1][point.y]++;
+        mMap[point.x-1][point.y-1]++;
+        mMap[point.x-1][point.y+1]++;
+        mMap[point.x+1][point.y]++;
+        mMap[point.x+1][point.y-1]++;
+        mMap[point.x+1][point.y+1]++;
+        mMap[point.x][point.y-1]++;
+        mMap[point.x][point.y+1]++;
     }
 
 }

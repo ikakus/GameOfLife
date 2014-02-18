@@ -15,23 +15,21 @@ public class Grid extends JPanel {
     BufferedImage surface;
 
 
-    private ArrayList<Point> mLiveCells;
-
-    private int mWindowWidth = 101;
-    private int mWindowHeight = 101;
+    private int mWindowWidth = 601;
+    private int mWindowHeight = 501;
     private int mStep = 10;
-
-
 
 
     private int mMapWidth = mWindowWidth / mStep;
     private int mMapHeight = mWindowHeight / mStep;
 
-    private int mMap[][] = new int[mMapWidth][mMapHeight];
+    private int mMapGeneration1[][] = new int[mMapWidth][mMapHeight];
+    private int mMapGeneration2[][]; //= new int[mMapWidth][mMapHeight];
+
+    private boolean mLiveCells[][] = new boolean[mMapWidth][mMapHeight];
 
     public Grid() {
 
-        mLiveCells = new ArrayList<Point>();
         surface = new BufferedImage(mWindowWidth, mWindowHeight, BufferedImage.TYPE_INT_RGB);
         view = new JLabel(new ImageIcon(surface));
         Graphics g = surface.getGraphics();
@@ -40,15 +38,13 @@ public class Grid extends JPanel {
         g.setColor(Color.BLACK);
         g.dispose();
 
-        AddCell(3, 3);
-        AddCell(3, 4);
-        AddCell(3, 5);
+        AddGlider();
 
 
         ReDrawGrid();
         ActionListener listener = new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
-                Test();
+                CheckRules();
                 ReDrawGrid();
             }
         };
@@ -58,11 +54,18 @@ public class Grid extends JPanel {
 
     }
 
-    private void Test() {
-        OutputMap();
-        CheckRules();
+
+    private void AddBlinker() {
+        AddCell(3, 1, mMapGeneration1);
+        AddCell(3, 2, mMapGeneration1);
+        AddCell(3, 3, mMapGeneration1);
     }
 
+    private void AddGlider() {
+        AddCell(1, 3, mMapGeneration1);
+        AddCell(2, 3, mMapGeneration1);
+        AddCell(3, 3, mMapGeneration1);
+    }
 
     public void ReDrawGrid() {
         Graphics g = surface.getGraphics();
@@ -85,12 +88,18 @@ public class Grid extends JPanel {
     }
 
     private void FillCells(Graphics g, int step, int width, int height) {
-        for (Point fillCell : mLiveCells) {
-            int cellX = step + (fillCell.x * step);
-            int cellY = step + (fillCell.y * step);
-            g.setColor(Color.BLACK);
-            g.fillRect(cellX, cellY, step, step);
-        }
+
+        for (int i = 1; i < mMapWidth - 1; i++)
+            for (int j = 1; j < mMapHeight - 1; j++) {
+
+                if (mLiveCells[i][j] == true) {
+                    int cellX = step + (i * step);
+                    int cellY = step + (j * step);
+                    g.setColor(Color.RED);
+                    g.fillRect(cellX, cellY, step, step);
+                }
+            }
+
         g.setColor(Color.BLACK);
         g.drawRect(step, step, width, height);
     }
@@ -100,79 +109,82 @@ public class Grid extends JPanel {
             g.drawLine(i, 0, i, height + step);
         }
 
-        for (int i = 0; i <= height; i += step){
+        for (int i = 0; i <= height; i += step) {
             g.drawLine(0, i, width + step, i);
         }
     }
 
 
-    private void OutputMap()
-    {
-        for (int i = 1; i < mMapWidth - 1; i++)
-        {
+    private void OutputMap() {
+        for (int i = 1; i < mMapWidth - 1; i++) {
             System.out.println();
             for (int j = 1; j < mMapHeight - 1; j++) {
 
-                System.out.print(Integer.toString( mMap[i][j]));
+                System.out.print(Integer.toString(mMapGeneration1[i][j]));
 
             }
         }
         System.out.println();
     }
-    private void CheckRules() {
-       // mLiveCells = new ArrayList<Point>();
 
+    private void CheckRules() {
+
+        mMapGeneration2 = new int[mMapWidth][mMapHeight];
         for (int i = 1; i < mMapWidth - 1; i++)
             for (int j = 1; j < mMapHeight - 1; j++) {
 
-                if(mMap[i][j] ==3){
-                    if(!ContainsCell(new Point(i,j)))
-                    AddCell(i,j);
-                }else
-
-                if (mMap[i][j] != 0 ) {
-
-                    if(mMap[i][j]>3 || mMap[i][j]<2)
+                if (mMapGeneration1[i][j] == 3) {
+                    AddCell(i, j, mMapGeneration2);
+                }
+                if (mMapGeneration1[i][j] == 2) {
                     if (ContainsCell(new Point(i, j)))
-                        RemoveCell(i, j);
+                        AddCell(i, j, mMapGeneration2);
                 }
 
             }
+
+        for (int i = 0; i < mMapWidth - 1; i++)
+            for (int j = 0; j < mMapHeight - 1; j++) {
+
+
+                if (mMapGeneration1[i][j] > 3 || mMapGeneration1[i][j] < 2)
+                    if (ContainsCell(new Point(i, j))) {
+                        // RemoveCell(i, j,mMapGeneration2);
+                        mLiveCells[i][j] = false;
+                    }
+
+            }
+
+        mMapGeneration1 = mMapGeneration2;
+
+
     }
 
-    public void AddCell(int x, int y) {
+    public void AddCell(int x, int y, int Map[][]) {
         Point p = new Point(x, y);
-        mLiveCells.add(p);
-        AppendNeighborCells(p);
+        mLiveCells[x][y] = true;
+        AppendNeighborCells(p, Map);
         repaint();
     }
 
-    public void RemoveCell(int x, int y) {
+    public void RemoveCell(int x, int y, int Map[][]) {
         Point p = new Point(x, y);
 
-        for(int i =0; i< mLiveCells.size()-1; i++)
-        {
-            if(p.x==mLiveCells.get(i).x && p.y == mLiveCells.get(i).y)
-            {
-                mLiveCells.remove(i);
-            }
-        }
+        mLiveCells[x][y] = false;
 
-        DecrementNeighborCells(p);
+        DecrementNeighborCells(p, Map);
         repaint();
     }
 
     private boolean ContainsCell(Point point) {
 
-        for (Point p : mLiveCells) {
-            if (point.x == p.x && point.y == p.y)
-                return true;
-        }
+        if (mLiveCells[point.x][point.y] == true)
+            return true;
 
         return false;
     }
 
-    private void DecrementNeighborCells(Point point) {
+    private void DecrementNeighborCells(Point point, int mMap[][]) {
         if (mMap[point.x - 1][point.y] != 0)
             mMap[point.x - 1][point.y]--;
 
@@ -198,7 +210,7 @@ public class Grid extends JPanel {
             mMap[point.x][point.y + 1]--;
     }
 
-    private void AppendNeighborCells(Point point) {
+    private void AppendNeighborCells(Point point, int mMap[][]) {
         mMap[point.x - 1][point.y]++;
         mMap[point.x - 1][point.y - 1]++;
         mMap[point.x - 1][point.y + 1]++;

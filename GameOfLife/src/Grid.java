@@ -49,7 +49,7 @@ public class Grid extends JPanel {
             }
         };
 
-        Timer timer = new Timer(1000, listener);
+        Timer timer = new Timer(300, listener);
         timer.start();
 
     }
@@ -62,6 +62,9 @@ public class Grid extends JPanel {
     }
 
     private void AddGlider() {
+
+        AddCell(2, 1, mMapGeneration1);
+        AddCell(3, 2, mMapGeneration1);
         AddCell(1, 3, mMapGeneration1);
         AddCell(2, 3, mMapGeneration1);
         AddCell(3, 3, mMapGeneration1);
@@ -69,7 +72,6 @@ public class Grid extends JPanel {
 
     public void ReDrawGrid() {
         Graphics g = surface.getGraphics();
-
         g.setColor(Color.ORANGE);
         g.fillRect(0, 0, mWindowWidth, mWindowHeight);
         FillCells(g, mStep, mWindowWidth, mWindowHeight);
@@ -82,7 +84,6 @@ public class Grid extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-
         FillCells(g, mStep, mWindowWidth, mWindowHeight);
         DrawGrid(g, mStep, mWindowWidth, mWindowHeight);
     }
@@ -119,9 +120,7 @@ public class Grid extends JPanel {
         for (int i = 1; i < mMapWidth - 1; i++) {
             System.out.println();
             for (int j = 1; j < mMapHeight - 1; j++) {
-
                 System.out.print(Integer.toString(mMapGeneration1[i][j]));
-
             }
         }
         System.out.println();
@@ -140,24 +139,17 @@ public class Grid extends JPanel {
                     if (ContainsCell(new Point(i, j)))
                         AddCell(i, j, mMapGeneration2);
                 }
-
             }
 
         for (int i = 0; i < mMapWidth - 1; i++)
             for (int j = 0; j < mMapHeight - 1; j++) {
-
-
                 if (mMapGeneration1[i][j] > 3 || mMapGeneration1[i][j] < 2)
                     if (ContainsCell(new Point(i, j))) {
                         // RemoveCell(i, j,mMapGeneration2);
                         mLiveCells[i][j] = false;
                     }
-
             }
-
         mMapGeneration1 = mMapGeneration2;
-
-
     }
 
     public void AddCell(int x, int y, int Map[][]) {

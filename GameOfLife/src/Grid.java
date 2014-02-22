@@ -3,7 +3,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
 
 
 /**
@@ -17,7 +16,7 @@ public class Grid extends JPanel {
 
     private int mWindowWidth = 601;
     private int mWindowHeight = 501;
-    private int mStep = 10;
+    private int mStep = 3;
 
 
     private int mMapWidth = mWindowWidth / mStep;
@@ -96,7 +95,7 @@ public class Grid extends JPanel {
                 if (mLiveCells[i][j] == true) {
                     int cellX = step + (i * step);
                     int cellY = step + (j * step);
-                    g.setColor(Color.RED);
+                    g.setColor(Color.BLACK );
                     g.fillRect(cellX, cellY, step, step);
                 }
             }
